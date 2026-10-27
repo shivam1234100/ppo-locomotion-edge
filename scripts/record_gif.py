@@ -21,9 +21,11 @@ MAX_MB = 8.0  # keep the README demo light enough to load quickly on GitHub
 SMALL_SIZE = 320  # fallback render size (px) if the GIF is too large
 
 
-def record(env_id, act, seed, max_steps, every, size=None):
+def record(env_id, act, seed, max_steps, every, camera, size=None):
     """One episode; returns (frames, episode return, steps). `act` is None for random actions."""
     kwargs = {"width": size, "height": size} if size else {}
+    if camera:
+        kwargs["camera_name"] = camera
     env = gym.make(env_id, render_mode="rgb_array", **kwargs)
     env.action_space.seed(seed)  # so the random-action clip is reproducible too
     obs, _ = env.reset(seed=seed)
@@ -50,6 +52,9 @@ def main():
     parser.add_argument("--max_steps", type=int, default=1000)
     parser.add_argument("--every", type=int, default=3, help="keep every n-th frame")
     parser.add_argument("--fps", type=int, default=30)
+    # Hopper's model defines a "track" camera (mode="trackcom") that follows the robot's centre of
+    # mass. The env's default free camera stays put, so a good policy hops out of view within ~1.5 s.
+    parser.add_argument("--camera", default="track", help="MuJoCo camera name; '' for the env default")
     args = parser.parse_args()
     torch.set_num_threads(1)
 
@@ -61,13 +66,14 @@ def main():
     out = Path(args.out or ("assets/hopper_random.gif" if args.random else "assets/hopper.gif"))
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    frames, ep_return, steps = record(env_id, act, args.seed, args.max_steps, args.every)
+    frames, ep_return, steps = record(env_id, act, args.seed, args.max_steps, args.every, args.camera)
     # duration is milliseconds per frame (Pillow GIF writer); loop=0 repeats forever.
     iio.imwrite(out, np.stack(frames), duration=1000 / args.fps, loop=0)
     if out.stat().st_size > MAX_MB * 2**20:
         # Too big: re-record at a smaller render size. Same seed and a deterministic policy (or the
         # seeded action space) give exactly the same episode.
-        frames, ep_return, steps = record(env_id, act, args.seed, args.max_steps, args.every, SMALL_SIZE)
+        frames, ep_return, steps = record(env_id, act, args.seed, args.max_steps, args.every, args.camera,
+                                          SMALL_SIZE)
         iio.imwrite(out, np.stack(frames), duration=1000 / args.fps, loop=0)
 
     h, w = frames[0].shape[:2]
