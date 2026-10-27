@@ -10,6 +10,8 @@ import numpy as np
 import torch
 import yaml
 
+from ppo.agent import Agent
+
 EPISODE_FIELDS = ["global_step", "episodic_return", "episodic_length"]
 METRIC_FIELDS = [
     "global_step", "learning_rate", "value_loss", "policy_loss", "entropy",
@@ -108,3 +110,17 @@ def save_checkpoint(path, agent, cfg, global_step):
         },
         path,
     )
+
+
+def load_agent(path):
+    """Rebuild an Agent from a checkpoint written by save_checkpoint. Returns (agent, config dict)."""
+    ckpt = torch.load(path, map_location="cpu")  # weights_only=True by default: loads tensors/containers only
+    state = ckpt["agent"]
+    # Network sizes come from the weight shapes, so no environment has to be built just to load a model.
+    obs_dim = state["actor_mean.0.weight"].shape[1]  # first Linear is (64, obs_dim)
+    act_dim = state["actor_logstd"].shape[1]  # (1, act_dim)
+    # obs_norm is not in the state_dict (it is a plain bool), so it comes from the saved config.
+    agent = Agent(obs_dim, act_dim, obs_norm=ckpt["config"]["obs_norm"])
+    agent.load_state_dict(state)  # strict: fails loudly if any weight or normalizer buffer is missing
+    agent.eval()
+    return agent, ckpt["config"]
