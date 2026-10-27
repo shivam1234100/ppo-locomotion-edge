@@ -1,0 +1,15 @@
+# Training output is large and regenerable; only small final artifacts
+# (models/, results/, assets/) are committed.
+runs/
+wandb/
+
+# Python / tooling caches
+__pycache__/
+.pytest_cache/
+.venv/
+
+# macOS Finder metadata
+.DS_Store
+
+# Private build notes (application details), not part of the public repo
+PROJECT_SPEC.pdf

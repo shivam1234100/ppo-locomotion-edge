@@ -1,0 +1,15 @@
+# Unpinned while building; pinned to the exact installed versions (pip freeze) once the
+# project is finished, so anyone can reproduce the results with the same library versions.
+# CPU only: the default PyPI torch wheel for macOS arm64 is the CPU build (MPS is never used).
+torch
+gymnasium[mujoco]>=1.1  # >=1.1 is needed for vector.AutoresetMode (same-step autoreset)
+numpy
+pyyaml
+pandas
+matplotlib
+imageio
+wandb
+onnx
+onnxscript  # torch.onnx.export's dynamo exporter depends on it
+onnxruntime
+pytest
