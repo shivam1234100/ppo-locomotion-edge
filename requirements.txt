@@ -1,15 +1,16 @@
-# Unpinned while building; pinned to the exact installed versions (pip freeze) once the
-# project is finished, so anyone can reproduce the results with the same library versions.
-# CPU only: the default PyPI torch wheel for macOS arm64 is the CPU build (MPS is never used).
-torch
-gymnasium[mujoco]>=1.1  # >=1.1 is needed for vector.AutoresetMode (same-step autoreset)
-numpy
-pyyaml
-pandas
-matplotlib
-imageio
-wandb
-onnx
-onnxscript  # torch.onnx.export's dynamo exporter depends on it
-onnxruntime
-pytest
+# Pinned to the exact versions the results in this repo were produced with (from pip freeze,
+# Python 3.11.18, Apple M1, macOS 14). Transitive dependencies are left to pip's resolver.
+# CPU only: the default PyPI torch wheel on macOS arm64 is the CPU build (MPS is never used).
+torch==2.14.1
+gymnasium[mujoco]==1.4.0  # >=1.1 needed for vector.AutoresetMode (same-step autoreset)
+mujoco==3.17.0  # pulled in by the extra above; pinned explicitly because the physics version affects returns
+numpy==2.4.6
+pyyaml==6.0.3
+pandas==3.1.0
+matplotlib==3.11.2
+imageio==2.38.1
+wandb==0.31.0
+onnx==1.23.2
+onnxscript==0.7.2  # torch.onnx.export's dynamo exporter depends on it
+onnxruntime==1.31.1
+pytest==9.1.1
